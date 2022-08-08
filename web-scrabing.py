@@ -6,16 +6,26 @@ import pandas as pd
 
 
 #%%
-AVAILABLE_PAGES = 394
+AVAILABLE_PAGES = 345
 soup = []
+html = []
 for i in range(1, AVAILABLE_PAGES):
     html_text = requests.get(f'https://sa.aqar.fm/%D8%B4%D9%82%D9%82-%D9%84%D9%84%D8%A5%D9%8A%D8%AC%D8%A7%D8%B1/%D8%A7%D9%84%D8%B1%D9%8A%D8%A7%D8%B6/{i}?rent_type=3').text
-    soup.append(BeautifulSoup(html_text, 'lxml'))
+    html.append(html_text)
+    # soup.append(BeautifulSoup(html_text, 'lxml'))
 
 
-web_pages = soup.copy()
+# web_pages = soup.copy()
 #%%
-while ! web_pages.size == 0:
+
+html_copy = html.copy()
+
+for i, html_string in enumerate(html):
+    with open(f"aqar_ads_pages/ad_page_{i}.html", "w") as file:
+        file.write(html_string)
+
+#%%
+while !len(web_pages) == 0:
     page = web_pages.pop(index=0)
     ads = page.find_all('div', class_="listing_LinkedListingCard__5SRvZ")
     for ad in ads:
