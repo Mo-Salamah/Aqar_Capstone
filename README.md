@@ -26,3 +26,39 @@ advertiser_name| provided by the advertiser
 advertiser_verified| [1, 0]
 advertiser_rating| [0, 10]
 number_ratings| number of ratings given to the advertiser
+
+
+
+Attribute| Description
+-----|------|
+user_id| id of the user who created the past
+id| post id
+uri| 
+title| of the post
+price| in Riyals
+content| the text description of the property
+imgs| list of urls where the images are saved
+refresh| date of latest refresh to the post
+category| 
+beds| number of bedrooms
+livings| number of living rooms
+wc| number of bathrooms
+area| in m^2
+type| 
+street_width| in m
+age| of property in years
+last_update|
+street_direction|
+ketchen| {0, 1}
+ac| {0, 1}
+furnished| {0, 1}
+location| ****change to multiple attributes***
+path
+user| ******change to multiple attributes***
+native| 
+district| where the property is located
+width| of property, in meteres
+length| of property, in meters
+advertiser_type| {'exclusive_marketer', 'normal_marketer', 'owner', 'agent'}
+create_time| date of post creation
+__typename
