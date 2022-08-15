@@ -33,32 +33,33 @@ Attribute| Description
 -----|------|
 user_id| id of the user who created the past
 id| post id
-uri| 
+uri| url of the post
 title| of the post
 price| in Riyals
 content| the text description of the property
 imgs| list of urls where the images are saved
-refresh| date of latest refresh to the post
-category| 
 beds| number of bedrooms
 livings| number of living rooms
 wc| number of bathrooms
 area| in m^2
-type| 
 street_width| in m
 age| of property in years
-last_update|
+last_update| date of latest refresh to the post
 street_direction|
 ketchen| {0, 1}
 ac| {0, 1}
 furnished| {0, 1}
 location| ****change to multiple attributes***
-path
+path| duplicate (with some differences)
 user| ******change to multiple attributes***
-native| 
 district| where the property is located
 width| of property, in meteres
 length| of property, in meters
 advertiser_type| {'exclusive_marketer', 'normal_marketer', 'owner', 'agent'}
 create_time| date of post creation
-__typename
+
+
+
+new attributes:
+
+street| use path to search for the word "شارع" and copy everything up until a /
