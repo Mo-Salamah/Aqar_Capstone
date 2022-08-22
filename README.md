@@ -49,7 +49,8 @@ street_direction|
 ketchen| {0, 1}
 ac| {0, 1}
 furnished| {0, 1}
-location| ****change to multiple attributes***
+latitude| latitude coordinate of the property
+longitude| longitude coordinate of the property 
 path| duplicate (with some differences)
 user| ******change to multiple attributes***
 district| where the property is located
