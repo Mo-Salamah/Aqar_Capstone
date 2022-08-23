@@ -1,4 +1,4 @@
-
+#%%
 import requests
 import numpy as np
 import pandas as pd
@@ -6,8 +6,9 @@ from time import sleep
 import warnings 
 import datetime
 import time
-
-
+import json
+from ml_models import train_and_predict
+#%%
 
 
 
@@ -95,7 +96,7 @@ def find_post(desired_post_id):
         
 
 
-
+#%%
 def clean_post(to_predict:pd.DataFrame, district_city_part:pd.DataFrame):
     """
     district_city_part is a dataframe containing the 
@@ -103,7 +104,7 @@ def clean_post(to_predict:pd.DataFrame, district_city_part:pd.DataFrame):
     """
     
     
-    to_predict = to_predict.drop(columns=['Unnamed: 0', 'rent_period', 'type',
+    to_predict = to_predict.drop(columns=['rent_period', 'type',
                                           'native', 'ac', 'city', '__typename',
                                           'category', 'refresh', 'user'], inplace=False)
     
@@ -116,12 +117,21 @@ def clean_post(to_predict:pd.DataFrame, district_city_part:pd.DataFrame):
     to_predict = get_district_english(to_predict)
 
     # get the city side of the district the apartment is in 
-    to_predict = to_predict.merge(district_city_part, left_on="district", right_on="district")
-    
+    # to_predict = to_predict.merge(district_city_part, left_on="district", right_on="district")
+    try:
+        to_predict['city_side'] = district_city_part.loc[district_city_part.district
+                                                         == to_predict.district.iloc[0]].iloc[0]['city_side']
+    except:
+        print("The district was not found!")
+        
     # create additional time featuers and fix existing ones
     to_predict = create_time_features(to_predict)
 
-
+    needless_features = ['id', 'uri', 'title', 'content', 'imgs', 'path', 'district']
+    
+    to_predict = to_predict.drop(columns=needless_features)
+    
+    return to_predict
 
 
 
@@ -154,6 +164,8 @@ def get_district_english(apartments):
                                                   
 # create "year", "month", and "day" features for each datetime feature
 def extract_time(datetime_ser:pd.Series, name):
+    # datetime_ser = pd.Series(pd.DatetimeIndex(datetime_ser))
+    
     year = datetime_ser.apply(lambda x: x.year)
     month =datetime_ser.apply(lambda x: x.month)
     day = datetime_ser.apply(lambda x: x.day)
@@ -166,6 +178,11 @@ def extract_time(datetime_ser:pd.Series, name):
                                 
                                 
 def create_time_features(apartments):
+    # transform ['last_update', 'create_time'] from int to datetime 
+    date_col = ['last_update', 'create_time']
+    for col in date_col:
+        apartments[col] = apartments[col].apply(datetime.datetime.fromtimestamp)
+    
     # create an attribute for the time the apartment has been on the market
     time_now = time.time()
     apartments['time_on_market'] = apartments.apply(lambda row: 
@@ -219,7 +236,7 @@ def create_squareness_and_regular_shapeness(apartments):
     
     return apartments
 
-
+#%%
 
 to_predict = find_post(4534367)
 print(to_predict.iloc[0])
@@ -228,8 +245,13 @@ cleaned_to_predict = clean_post(to_predict)
 print(cleaned_to_predict)
 
 
+def good_deal_indicator(apartments, desired_post_id):
+    to_predict_raw = find_post(desired_post_id)
+    to_predict_clean = clean_post(to_predict_raw, apartments[['district', 'city_side']])
+    
+    
 
-
+    # what is the order of the features
 
 
 

@@ -40,9 +40,9 @@ apartments = pd.read_csv("../data/apartments_sale_riyadh_cleaned.csv")
 train, test = train_test_split(apartments, test_size=0.3, random_state=123)
 
 # drop needless features
-needless_features = ['id', 'uri', 'title', 'content', 'imgs', 'path', 'district']
-train.drop(columns=needless_features, inplace=True)
-test.drop(columns=needless_features, inplace=True)
+# needless_features = ['id', 'uri', 'title', 'content', 'imgs', 'path', 'district']
+# train.drop(columns=needless_features, inplace=True)
+# test.drop(columns=needless_features, inplace=True)
 
 X_train = train.drop(columns='price')
 y_train = train['price']

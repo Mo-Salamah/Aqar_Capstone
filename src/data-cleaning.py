@@ -45,9 +45,7 @@ apartments.drop(columns=['rent_period', 'type', 'native', 'ac'], inplace=True)
 # drop attributes with 0 variability
 apartments.drop(columns=['city', '__typename', 'category'], inplace=True)
 # drop duplicate attribute
-apartments.drop(columns=['refresh'], inplace=True)
-# drop difficult to clean attrbites
-apartments.drop(columns=['user'], inplace=True) # ******* clean this *****
+apartments.drop(columns=['refresh', 'user'], inplace=True)
 
 
 #%%
@@ -158,7 +156,8 @@ apartments['regular_shapeness'] = apartments.apply(lambda row:
 
 #%%
 # apartments['num_imgs'] = apartments.apply(lambda row: len(list(row['imgs'])) if type(row['imgs']) == str else 0, axis=1)
-
+needless_features = ['id', 'uri', 'title', 'content', 'imgs', 'path', 'district']
+apartments.drop(columns=needless_features, inplace=True)
 #%%
 # drop the apartment with the highest price value
 # because it appears not to be a genueine ad 
