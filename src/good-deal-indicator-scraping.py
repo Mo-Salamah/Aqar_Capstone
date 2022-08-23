@@ -12,7 +12,14 @@ from ml_models import train_and_predict
 
 
 
-def find_post(desired_post_id):
+def find_post(apartments, desired_post_id):
+    if desired_post_id in list(apartments.id):
+        desired_apartment = apartments.loc[apartments.id == desired_post_id]
+        apartments.drop(apartments[apartments.id == desired_post_id].index, inplace=True)
+        clean = True
+        assert desired_apartment.shape[0] == 1
+        return desired_apartment, clean
+    
     FIRST_PAGE = 0
     i = FIRST_PAGE
     all_listings = pd.DataFrame([])
@@ -68,7 +75,7 @@ def find_post(desired_post_id):
             }
 
             response = requests.post('https://sa.aqar.fm/graphql', cookies=cookies, headers=headers, json=json_data)
-
+            clean = False
             
             # a webpage containing 20 apartment listings and other elements
             response_json = response.json()
@@ -76,8 +83,8 @@ def find_post(desired_post_id):
             listings_list = response_json.get('data').get('Web').get('find').get('listings')
 
             listings_list = pd.DataFrame(listings_list)
-            print(listings_list.shape)
-            print(f"i = {i}")
+            # print(listings_list.shape)
+            # print(f"i = {i}")
             # appending listings from different pages to one dataframe
             if i != 0:
                 if list(all_listings.iloc[0])[1] ==list(listings_list.iloc[0])[1]:
@@ -87,12 +94,14 @@ def find_post(desired_post_id):
                         
             all_listings = all_listings.append(listings_list, ignore_index=True)
             if desired_post_id in list(listings_list['id']):
-                return listings_list.loc[listings_list['id'] == desired_post_id]
+                return listings_list.loc[listings_list['id'] == desired_post_id], clean
+            elif i >= 500:
+                return "Search failed", clean
             
             sleep(0.5)
             i+=20
         except:
-            return all_listings
+            return "Search failed", clean
         
 
 
@@ -104,7 +113,7 @@ def clean_post(to_predict:pd.DataFrame, district_city_part:pd.DataFrame):
     """
     
     
-    to_predict = to_predict.drop(columns=['rent_period', 'type',
+    to_predict = to_predict.drop(columns=['Unnamed: 0', 'rent_period', 'type',
                                           'native', 'ac', 'city', '__typename',
                                           'category', 'refresh', 'user'], inplace=False)
     
@@ -114,21 +123,31 @@ def clean_post(to_predict:pd.DataFrame, district_city_part:pd.DataFrame):
                                                   'length', 'width']].apply(
                                                       lambda ser: ser.astype('Int64', errors='ignore'))
     
-    to_predict = get_district_english(to_predict)
+    
 
     # get the city side of the district the apartment is in 
-    # to_predict = to_predict.merge(district_city_part, left_on="district", right_on="district")
+    to_predict = to_predict.merge(district_city_part, left_on="district", right_on="district")
     try:
         to_predict['city_side'] = district_city_part.loc[district_city_part.district
                                                          == to_predict.district.iloc[0]].iloc[0]['city_side']
     except:
         print("The district was not found!")
-        
+        to_predict['city_side'] = np.nan
+    
+    # district_english 
+    to_predict = get_district_english(to_predict)
+    
     # create additional time featuers and fix existing ones
     to_predict = create_time_features(to_predict)
-
-    needless_features = ['id', 'uri', 'title', 'content', 'imgs', 'path', 'district']
     
+    # longitude and latitude  
+    to_predict = extract_coordinates(to_predict)
+
+    # additional length and width-related features
+    to_predict = create_squareness_and_regular_shapeness(to_predict)
+    
+    # needless_features = ['uri', 'title', 'content', 'imgs', 'path']
+    needless_features = ['id','uri', 'title', 'content', 'imgs', 'path', 'district']
     to_predict = to_predict.drop(columns=needless_features)
     
     return to_predict
@@ -225,38 +244,114 @@ def extract_coordinates(apartments):
 
 def create_squareness_and_regular_shapeness(apartments):
     # create an attribute for the ratio between the length and width of the apartment
-    apartments['squareness'] = apartments.apply(lambda row: 
-        row['width'] / row['length'] if (row['width'] < row['length'])
-        else row['length'] / row['width'], axis=1) 
+    try:
+        apartments['squareness'] = apartments.apply(lambda row: 
+            row['width'] / row['length'] if (row['width'] < row['length'])
+            else row['length'] / row['width'], axis=1) 
 
 
-    # create an attribute for how close the shape of the apartment is to a rectangular shape
-    apartments['regular_shapeness'] = apartments.apply(lambda row: 
-        row['area'] / (row['width'] * row['length']), axis=1) 
+        # create an attribute for how close the shape of the apartment is to a rectangular shape
+        apartments['regular_shapeness'] = apartments.apply(lambda row: 
+            row['area'] / (row['width'] * row['length']), axis=1) 
+
+        return apartments 
+    except:
+        apartments['regular_shapeness'] = np.nan
+        apartments['squareness'] = np.nan
+        return apartments
+    
     
     return apartments
+def get_deal_goodness(predicted_price, real_price):
+    predicted_price_type = type(predicted_price)
+    real_price_type = type(real_price)
+    print(f"predicted price: {predicted_price}")
+    print(f"real price: {real_price}")
+    print(f"predicted price type: {predicted_price_type}")
+    print(f"real price type: {predicted_price_type}", end="\n\n")
+    # predicted_price = predicted_price[0]
+    # real_price = real_price[0]
+    # predicted_price_type = type(predicted_price)
+    # real_price_type = type(real_price)
+    # print(f"predicted price: {predicted_price}")
+    # print(f"real price: {predicted_price}")
+    # print(f"predicted price type: {predicted_price_type}")
+    # print(f"real price type: {predicted_price_type}", end="\n\n")
+    
+    price_ratio = predicted_price / real_price
+    deal_goodness = ""
+    if price_ratio < 0.8:
+        deal_goodness = "Greate Deal"
+    elif price_ratio < 0.9:
+        deal_goodness = "Good Deal"
+    elif price_ratio > 0.9 and price_ratio < 1.1:
+        deal_goodness = "Fair Deal"
+    elif price_ratio > 1.2:
+        deal_goodness = "Terrible Deal"
+    elif price_ratio > 1.1:
+        deal_goodness = "Poor Deal"
+        
+    return deal_goodness
+        
 
 #%%
 
-to_predict = find_post(4534367)
-print(to_predict.iloc[0])
+# to_predict = find_post(4534367)
+# print(to_predict.iloc[0])
 
-cleaned_to_predict = clean_post(to_predict)
-print(cleaned_to_predict)
+# cleaned_to_predict = clean_post(to_predict)
+# print(cleaned_to_predict)
 
 
 def good_deal_indicator(apartments, desired_post_id):
-    to_predict_raw = find_post(desired_post_id)
-    to_predict_clean = clean_post(to_predict_raw, apartments[['district', 'city_side']])
+    apartments_copy = apartments.copy()
+    to_predict_raw, clean = find_post(apartments, desired_post_id)
+    if type(to_predict_raw) == str and to_predict_raw == "Search failed":
+        return "Post could not be found"
+    elif clean:
+        # print("as expected", end="\n\n")
+        # print("to predict raw")
+        # print(to_predict_raw, end="\n\n")
+        
+        to_predict_clean = to_predict_raw
+        
+        # print("to predict clean")
+        # print(to_predict_clean, end="\n\n")
+        # assert to_predict_clean == to_predict_raw
+        # print("they are the same", end="\n\n")
+    else:
+        to_predict_clean = clean_post(to_predict_raw, apartments_copy[['district', 'city_side']])
+        
+        
+        
+        
+        
+        
+    # print("to_predict_clean")
+    # print(to_predict_clean) 
+
+    # drop district names in Arabic
+    apartments_copy.drop(columns=["district", 'id'], inplace=True)
+
+    
+    print("apartments head")
+    print(apartments_copy.head(1), end="\n\n")
+    print("to_predict_clean")
+    print(to_predict_clean, end="\n\n")
     
     
-
-    # what is the order of the features
-
-
-
-
-
-
+    predicted_price, real_price = train_and_predict(apartments_copy, to_predict_clean)
+    # print(predicted_price)
+    # print(real_price)
+    deal_goodness = get_deal_goodness(predicted_price, real_price)
+    
+    return deal_goodness
 
 
+
+
+
+
+
+
+# %%

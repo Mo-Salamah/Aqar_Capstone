@@ -36,7 +36,6 @@ apartments = pd.concat(dataframes_list, axis=0, ignore_index=True)
 # drop duplicates
 apartments.drop_duplicates(inplace=True)
 
-print(apartments.city_side.value_counts())
 #%%
 # drop old index
 apartments.drop(columns=['Unnamed: 0'], inplace=True)
@@ -51,7 +50,7 @@ apartments.drop(columns=['refresh', 'user'], inplace=True)
 #%%
 
 apartments[['livings', 'street_width', 'age', 'ketchen', 'furnished', 'length', 'width']] = apartments[['livings', 'street_width', 'age', 'ketchen', 'furnished', 'length', 'width']].apply(lambda ser: 
-    ser.astype('Int64', errors='ignore'))
+    np.floor(pd.to_numeric(ser, errors='coerce')).astype('Int64'))
 
 
 #%%
@@ -156,7 +155,7 @@ apartments['regular_shapeness'] = apartments.apply(lambda row:
 
 #%%
 # apartments['num_imgs'] = apartments.apply(lambda row: len(list(row['imgs'])) if type(row['imgs']) == str else 0, axis=1)
-needless_features = ['id', 'uri', 'title', 'content', 'imgs', 'path', 'district']
+needless_features = ['uri', 'title', 'content', 'imgs', 'path']
 apartments.drop(columns=needless_features, inplace=True)
 #%%
 # drop the apartment with the highest price value
@@ -170,12 +169,11 @@ apartments.drop(apartments.price.idxmin(), axis=0, inplace=True)
 percentile_99th = apartments.price.quantile(0.99)
 apartments_exc = apartments.loc[apartments.price < percentile_99th]
 
+
+
 #%%
-apartments.to_csv("../data/apartments_sale_riyadh_cleaned.csv", index=False)
-apartments_exc.to_csv("../data/apartments_sale_riyadh_cleaned_exclusive.csv", index=False)
+# write csv files
+# apartments.to_csv("../data/apartments_sale_riyadh_cleaned.csv", index=False)
+# apartments_exc.to_csv("../data/apartments_sale_riyadh_cleaned_exclusive.csv", index=False)
 
 
-
-
-
-# %%

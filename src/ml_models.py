@@ -39,11 +39,6 @@ apartments = pd.read_csv("../data/apartments_sale_riyadh_cleaned.csv")
 # create train-test split
 train, test = train_test_split(apartments, test_size=0.3, random_state=123)
 
-# drop needless features
-# needless_features = ['id', 'uri', 'title', 'content', 'imgs', 'path', 'district']
-# train.drop(columns=needless_features, inplace=True)
-# test.drop(columns=needless_features, inplace=True)
-
 X_train = train.drop(columns='price')
 y_train = train['price']
 
@@ -132,30 +127,39 @@ print(f"mean score : {result}", end='\n\n')
 #%%
 def train_and_predict(df, to_predict):
     # not necessary
+    print("the problem is in splitting the data")
     train, test = train_test_split(df, test_size=0.3)
     X_train = train.drop(columns="price")
     y_train = train['price']
-    
+    print("no problem splitting the data to train and test",end='\n\n')
     # ensure all null values have the same encoding
     X_train = X_train.fillna(value=np.nan)
     to_predict = to_predict.fillna(value=np.nan)
+    print("no problem filling na values",end='\n\n')
 
-    print(type(to_predict))
-    print(to_predict.shape)
-    print(to_predict)
-    
+
+
+    real_price = to_predict['price'][0]
+    to_predict.drop(columns="price", inplace=True)
+    print("no problem sitting up the test case (to predict)", end='\n\n')
     # preprocess training set and 'test' case
     preprocessed_minimal_X_train = preprocessor_minimal.fit_transform(X_train)
     preprocessed_to_predict = preprocessor_minimal.transform(pd.DataFrame(to_predict))
-
+    print("no problem preprocessing", end='\n\n')
     # preprocess training set label
     # preprocessed_y_train = PowerTransformer('box-cox').fit_transform(np.array(y_train).reshape(-1, 1))
     preprocessed_y_train = y_train
 
     lm.fit(preprocessed_minimal_X_train, preprocessed_y_train)
-    predicted_price = lm.predict(preprocessed_to_predict)
+    predicted_price = lm.predict(preprocessed_to_predict)[0]
     # predicted_price = 4
-    return predicted_price
+    predicted_price_type = type(predicted_price)
+    real_price_type = type(real_price)
+    print(f"predicted price: {predicted_price}")
+    print(f"real price: {real_price}")
+    print(f"predicted price type: {predicted_price_type}")
+    print(f"real price type: {predicted_price_type}", end="\n\n")
+    return predicted_price, real_price
     
     
 
