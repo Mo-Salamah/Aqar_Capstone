@@ -51,7 +51,7 @@ y_test = test['price']
 # %%
 # target enginnering
 
-y_train = PowerTransformer('box-cox').fit_transform(np.array(y_train).reshape(-1, 1))
+# y_train = PowerTransformer('box-cox').fit_transform(np.array(y_train).reshape(-1, 1))
 
 # %%
 # Numeric feature engineering
@@ -111,13 +111,13 @@ print(f"cross-validation folds: 5")
 print(f"cross-validation repeats: 5", end='\n\n')
 
 
-
+preprocessed_y_train = PowerTransformer('box-cox').fit_transform(np.array(y_train).reshape(-1, 1))
 
 
 #%%
 preprocessed_minimal_X_train = preprocessor_minimal.fit_transform(X_train)
 
-results_lm = cross_val_score(lm, preprocessed_minimal_X_train, y_train, cv = cv, scoring=loss)
+results_lm = cross_val_score(lm, preprocessed_minimal_X_train, preprocessed_y_train, cv = cv, scoring=loss)
 result = np.mean(np.abs(results_lm))
 
 print("========= Ordinary Least Squares (Minimal Preprocessing) =========")
@@ -125,57 +125,61 @@ print("========= Ordinary Least Squares (Minimal Preprocessing) =========")
 print(f"mean score : {result}", end='\n\n')
 
 #%%
+preprocessed_minimal_X_train = preprocessor_minimal.fit_transform(X_train)
+
+# create model object
+mod = ElasticNet(tol=0.01)
+
+# Create grid of hyperparameter values
+hyper_grid = {
+  'alpha': 10**np.linspace(10, -5, 10)*0.5,
+  'l1_ratio': (0, 0.25, 0.5, 0.75 , 1)
+  }
+
+# 5-fold CV grid search
+grid_search = GridSearchCV(mod, hyper_grid, cv=cv, scoring=loss)
+results_elastic = grid_search.fit(preprocessed_minimal_X_train, preprocessed_y_train)
+
+print("========= ElasticNet (Minimal Preprocessing) =========")
+# Optimal penalty parameter in grid search
+result = np.abs(results_elastic.best_score_)
+print(f"mean score : {result}", end='\n\n')
+print(f"alpha: {results_elastic.best_estimator_}")
+
+
+#%%
 def train_and_predict(df, to_predict):
-    # not necessary
-    print("the problem is in splitting the data")
     train, test = train_test_split(df, test_size=0.3)
     X_train = train.drop(columns="price")
     y_train = train['price']
-    print("no problem splitting the data to train and test",end='\n\n')
+
     # ensure all null values have the same encoding
     X_train = X_train.fillna(value=np.nan)
     to_predict = to_predict.fillna(value=np.nan)
-    print("no problem filling na values",end='\n\n')
-
-
 
     real_price = to_predict['price'].iloc[0]
     to_predict.drop(columns=["price"], inplace=True)
     
-    
-    print("no problem sitting up the test case (to predict)", end='\n\n')
     # preprocess training set and 'test' case
     preprocessed_minimal_X_train = preprocessor_minimal.fit_transform(X_train)
     preprocessed_to_predict = preprocessor_minimal.transform(to_predict)
-    print("no problem preprocessing", end='\n\n')
+
     # preprocess training set label
     # preprocessed_y_train = PowerTransformer('box-cox').fit_transform(np.array(y_train).reshape(-1, 1))
     preprocessed_y_train = y_train
 
     lm.fit(preprocessed_minimal_X_train, preprocessed_y_train)
     predicted_price = lm.predict(preprocessed_to_predict)[0]
-    # predicted_price = 4
-    predicted_price_type = type(predicted_price)
-    real_price_type = type(real_price)
+
+
     print(f"predicted price: {predicted_price}")
     print(f"real price: {real_price}")
-    print(f"predicted price type: {predicted_price_type}")
-    print(f"real price type: {real_price_type}", end="\n\n")
+    # predicted_price_type = type(predicted_price)
+    # real_price_type = type(real_price)
+    # print(f"predicted price type: {predicted_price_type}")
+    # print(f"real price type: {real_price_type}", end="\n\n")
     return predicted_price, real_price
     
     
 
 
-
-
-# %%
-'''
-preprocessed_X_train = preprocessor.fit_transform(X_train)
-
-results_lm = cross_val_score(lm, preprocessed_X_train, y_train, cv = cv, scoring=loss)
-result = np.mean(np.abs(results_lm))
-
-print("========= Ordinary Least Squares (Extensive Preprocessing) =========")
-
-print(f"mean score : {result}", end='\n\n')
-'''
