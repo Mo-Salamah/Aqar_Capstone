@@ -14,10 +14,11 @@ from ml_models import train_and_predict
 
 def find_post(apartments, desired_post_id):
     if desired_post_id in list(apartments.id):
-        desired_apartment = apartments.loc[apartments.id == desired_post_id]
+        desired_apartment = apartments.loc[apartments.id == desired_post_id].iloc[0]
         apartments.drop(apartments[apartments.id == desired_post_id].index, inplace=True)
         clean = True
         assert desired_apartment.shape[0] == 1
+        print(desired_apartment)
         return desired_apartment, clean
     
     FIRST_PAGE = 0
@@ -113,7 +114,7 @@ def clean_post(to_predict:pd.DataFrame, district_city_part:pd.DataFrame):
     """
     
     
-    to_predict = to_predict.drop(columns=['Unnamed: 0', 'rent_period', 'type',
+    to_predict = to_predict.drop(columns=['rent_period', 'type',
                                           'native', 'ac', 'city', '__typename',
                                           'category', 'refresh', 'user'], inplace=False)
     
@@ -146,8 +147,7 @@ def clean_post(to_predict:pd.DataFrame, district_city_part:pd.DataFrame):
     # additional length and width-related features
     to_predict = create_squareness_and_regular_shapeness(to_predict)
     
-    # needless_features = ['uri', 'title', 'content', 'imgs', 'path']
-    needless_features = ['id','uri', 'title', 'content', 'imgs', 'path', 'district']
+    needless_features = ['uri', 'title', 'content', 'imgs', 'path']
     to_predict = to_predict.drop(columns=needless_features)
     
     return to_predict
@@ -225,7 +225,7 @@ def create_time_features(apartments):
 
 def extract_coordinates(apartments):
     # extract latitude and longitude from location 
-    apartments['location'] = apartments.location.apply(lambda s: json.loads(s.replace("\'", "\""))) 
+    # apartments['location'] = apartments.location.apply(lambda s: json.loads(s.replace("\'", "\""))) 
 
     latitude = []
     longitude = []
@@ -262,24 +262,9 @@ def create_squareness_and_regular_shapeness(apartments):
     
     
     return apartments
-def get_deal_goodness(predicted_price, real_price):
-    predicted_price_type = type(predicted_price)
-    real_price_type = type(real_price)
-    print(f"predicted price: {predicted_price}")
-    print(f"real price: {real_price}")
-    print(f"predicted price type: {predicted_price_type}")
-    print(f"real price type: {predicted_price_type}", end="\n\n")
-    # predicted_price = predicted_price[0]
-    # real_price = real_price[0]
-    # predicted_price_type = type(predicted_price)
-    # real_price_type = type(real_price)
-    # print(f"predicted price: {predicted_price}")
-    # print(f"real price: {predicted_price}")
-    # print(f"predicted price type: {predicted_price_type}")
-    # print(f"real price type: {predicted_price_type}", end="\n\n")
-    
-    price_ratio = predicted_price / real_price
-    deal_goodness = ""
+def get_deal_goodness(predicted_price, real_price):    
+    price_ratio = real_price / predicted_price 
+
     if price_ratio < 0.8:
         deal_goodness = "Greate Deal"
     elif price_ratio < 0.9:
@@ -306,19 +291,12 @@ def get_deal_goodness(predicted_price, real_price):
 def good_deal_indicator(apartments, desired_post_id):
     apartments_copy = apartments.copy()
     to_predict_raw, clean = find_post(apartments, desired_post_id)
+    print("dimensions of posts with given post_id")
+    print(to_predict_raw.shape)
     if type(to_predict_raw) == str and to_predict_raw == "Search failed":
         return "Post could not be found"
     elif clean:
-        # print("as expected", end="\n\n")
-        # print("to predict raw")
-        # print(to_predict_raw, end="\n\n")
-        
         to_predict_clean = to_predict_raw
-        
-        # print("to predict clean")
-        # print(to_predict_clean, end="\n\n")
-        # assert to_predict_clean == to_predict_raw
-        # print("they are the same", end="\n\n")
     else:
         to_predict_clean = clean_post(to_predict_raw, apartments_copy[['district', 'city_side']])
         
@@ -332,13 +310,7 @@ def good_deal_indicator(apartments, desired_post_id):
 
     # drop district names in Arabic
     apartments_copy.drop(columns=["district", 'id'], inplace=True)
-
-    
-    print("apartments head")
-    print(apartments_copy.head(1), end="\n\n")
-    print("to_predict_clean")
-    print(to_predict_clean, end="\n\n")
-    
+    to_predict_clean.drop(columns=["district", 'id'], inplace=True)    
     
     predicted_price, real_price = train_and_predict(apartments_copy, to_predict_clean)
     # print(predicted_price)

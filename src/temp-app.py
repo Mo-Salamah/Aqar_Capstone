@@ -10,11 +10,13 @@ from sklearn.model_selection import train_test_split
 import pandas as pd
 import json
 import geopandas as gpd
+import os
 
 # =================================================================
 
 # load data 
-
+os.chdir("/Users/mo/Desktop/DSI/Aqar_Capstone/src")
+print(os.getcwd())
 map_df = gpd.read_file("../data/riyadh.geojson")
 
 with open(r"../data/riyadh_districts.json", 'r', encoding='utf8', errors='ignore') as file:

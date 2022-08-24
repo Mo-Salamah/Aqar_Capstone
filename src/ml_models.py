@@ -139,12 +139,14 @@ def train_and_predict(df, to_predict):
 
 
 
-    real_price = to_predict['price'][0]
-    to_predict.drop(columns="price", inplace=True)
+    real_price = to_predict['price'].iloc[0]
+    to_predict.drop(columns=["price"], inplace=True)
+    
+    
     print("no problem sitting up the test case (to predict)", end='\n\n')
     # preprocess training set and 'test' case
     preprocessed_minimal_X_train = preprocessor_minimal.fit_transform(X_train)
-    preprocessed_to_predict = preprocessor_minimal.transform(pd.DataFrame(to_predict))
+    preprocessed_to_predict = preprocessor_minimal.transform(to_predict)
     print("no problem preprocessing", end='\n\n')
     # preprocess training set label
     # preprocessed_y_train = PowerTransformer('box-cox').fit_transform(np.array(y_train).reshape(-1, 1))
@@ -158,7 +160,7 @@ def train_and_predict(df, to_predict):
     print(f"predicted price: {predicted_price}")
     print(f"real price: {real_price}")
     print(f"predicted price type: {predicted_price_type}")
-    print(f"real price type: {predicted_price_type}", end="\n\n")
+    print(f"real price type: {real_price_type}", end="\n\n")
     return predicted_price, real_price
     
     
