@@ -5,12 +5,13 @@ import plotly.graph_objects as go
 from dash import Dash, dcc, html, Input, Output
 import numpy as np
 from sklearn.neighbors import KNeighborsClassifier
-from dash import Dash, dcc, html, Input, Output
+from dash import Dash, dcc, html, Input, Output, State
 from sklearn.model_selection import train_test_split
 import pandas as pd
 import json
 import geopandas as gpd
 import os
+from good_deal_indicator_scraping import good_deal_indicator
 
 # =================================================================
 
@@ -78,6 +79,8 @@ def make_plot(geo_df, color):
                             hover_data={'price':':.0f'})
     return fig
 
+
+
 district_features = [{'label': 'price', 'value': 'price'}, 
                      {'label': 'age', 'value': 'age'}, 
                      {'label': 'area', 'value': 'area'}, 
@@ -96,7 +99,26 @@ city_sides = [#{'label': 'All', 'value': ['north','south', 'east', 'west']},
 app = Dash(__name__)
 
 app.layout = html.Div([
-    html.H3('Explore the Sale Appartment Market in Riyadh'),
+    html.Div(
+        html.H3('Explore the Sale Appartment Market in Riyadh'),
+        style={'width':'75%', 'display': 'inline-block'}),
+    
+    html.Div(
+        dcc.Textarea(id='input-on-submit', placeholder="Enter the apartment's post ID"),
+        style={'width':'15%', 'display':'inline-block'}),
+    
+    html.Div(
+        html.Button('Submit', id='indicator-button', n_clicks=0),
+        style={'width':'10%', 'display':'inline-block'}),
+    
+    html.Div(
+        id='deal_goodness',
+        children=[],
+        # style={'width':'75%'}
+        ),
+
+    
+            
     dcc.Graph(id="graph", ),
     html.H4("Select a feature to color the plot"),
     # dcc.Dropdown(id="dropdown_color", options=district_features),
@@ -105,22 +127,35 @@ app.layout = html.Div([
 ])
 
 
-@app.callback(Output("graph", "figure"), 
+@app.callback(
+              Output('deal_goodness', 'children'),
+              Output("graph", "figure"), 
+              Input('input-on-submit', 'value'),
+              Input('indicator-button', 'n_clicks'),
               Input("radio_color", "value"),
-              Input("checklist_city_side", "value"))
-# @app.callback()
+              Input("checklist_city_side", "value"),
+              )
 
-def app_function(color='price', city_sides=['north','south', 'east', 'west']):
-    
+def app_function(post_id=0, n_clicks=0, color='price', city_sides=['north','south', 'east', 'west']):
+    deal_goodness = ""
+    if post_id != None and len(list(str(post_id))) > 1:
+
+        df = pd.read_csv("../data/apartments_sale_riyadh_cleaned.csv")
+        deal_goodness = good_deal_indicator(df, int(post_id))
+        
     # city_side_mapper = {'north': 1, 'south': 2, 'east': 3, 'west':4, 'middle':5}
     city_sides = list(pd.Series(city_sides).apply(lambda side: city_side_mapper[side]))
 
     df = geo_df.loc[geo_df['city_side'].apply(lambda side: side in city_sides)]
+
     fig = make_plot(df, color)
-    
-    return fig
-# def app_function():
-#     print("the function was run")
+
+    return deal_goodness, fig
 
 
+
+#%%
 app.run(debug=True)
+
+# %%
+# 4403633

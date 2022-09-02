@@ -13,12 +13,26 @@ from ml_models import train_and_predict
 
 
 def find_post(apartments, desired_post_id):
+    """ collects data associated with the apartment
+    with the given post ID
+
+    Args:
+        apartments (pd.DataFrame): contains all apartments 
+        desired_post_id (int): the post ID
+
+    Returns:
+        pd.DataFrame or string: dataframe of the apartment or 'Search failed'
+    """
     if desired_post_id in list(apartments.id):
-        desired_apartment = apartments.loc[apartments.id == desired_post_id].iloc[0]
+        # desired_apartment = pd.DataFrame(apartments.loc[apartments.id == desired_post_id].iloc[0],
+        #                                  columns=apartments.columns)
+        desired_apartment = apartments.loc[apartments.id == desired_post_id]
+        
+        
+        # drop to_be_predicted apartment from apartments dataset to avoid data leak
         apartments.drop(apartments[apartments.id == desired_post_id].index, inplace=True)
         clean = True
-        assert desired_apartment.shape[0] == 1
-        print(desired_apartment)
+        # assert desired_apartment.shape[0] == 1
         return desired_apartment, clean
     
     FIRST_PAGE = 0
@@ -95,7 +109,7 @@ def find_post(apartments, desired_post_id):
                         
             all_listings = all_listings.append(listings_list, ignore_index=True)
             if desired_post_id in list(listings_list['id']):
-                return listings_list.loc[listings_list['id'] == desired_post_id], clean
+                return pd.DataFrame(listings_list.loc[listings_list['id'] == desired_post_id], columns=apartments.columns), clean
             elif i >= 500:
                 return "Search failed", clean
             
@@ -109,8 +123,16 @@ def find_post(apartments, desired_post_id):
 #%%
 def clean_post(to_predict:pd.DataFrame, district_city_part:pd.DataFrame):
     """
-    district_city_part is a dataframe containing the 
-    district names in Arabic and the corresponding city side
+    cleans a raw web-scraped dataframe to a clean dataframe
+    with the same features as apartments
+
+    Args:
+        to_predict (pd.DataFrame): the dataframe that will be cleaned
+        district_city_part (pd.DataFrame): dataframe with districts 
+                                in a city and the city parts they are located
+
+    Returns:
+        pd.DataFrame: cleaned to_predict dataframe
     """
     
     
@@ -262,8 +284,20 @@ def create_squareness_and_regular_shapeness(apartments):
     
     
     return apartments
-def get_deal_goodness(predicted_price, real_price):    
-    price_ratio = real_price / predicted_price 
+def get_deal_goodness(predicted_price, real_price):   
+    """
+    returns an assessment of the goodness of a deal based
+    on the ratio of predicted_price to real_price
+
+    Args:
+        predicted_price (integer): the price as predicted by ML model
+        real_price (integer): the price as posted on Aqar
+
+    Returns:
+        string: one of {'great deal','good deal', 'fair deal',
+        'bad deal', 'terrible deal'}
+    """
+    price_ratio = real_price / predicted_price   
 
     if price_ratio < 0.8:
         deal_goodness = "Greate Deal"
@@ -280,19 +314,22 @@ def get_deal_goodness(predicted_price, real_price):
         
 
 #%%
-
-# to_predict = find_post(4534367)
-# print(to_predict.iloc[0])
-
-# cleaned_to_predict = clean_post(to_predict)
-# print(cleaned_to_predict)
-
-
 def good_deal_indicator(apartments, desired_post_id):
+    """
+    determines whether the stated price of an apartment is
+    higher than the ML model predicts
+
+    Args:
+        apartments (pd.DataFrame): contains all apartments in dataset
+        desired_post_id (integer): the post ID that can be found in Aqar
+
+    Returns:
+        string: one of {'great deal','good deal', 'fair deal', 'bad deal', 'terrible deal'}
+        if search for apartment with specified post ID can be found, or 'Search failed'
+    """
     apartments_copy = apartments.copy()
     to_predict_raw, clean = find_post(apartments, desired_post_id)
-    print("dimensions of posts with given post_id")
-    print(to_predict_raw.shape)
+    
     if type(to_predict_raw) == str and to_predict_raw == "Search failed":
         return "Post could not be found"
     elif clean:
@@ -300,30 +337,16 @@ def good_deal_indicator(apartments, desired_post_id):
     else:
         to_predict_clean = clean_post(to_predict_raw, apartments_copy[['district', 'city_side']])
         
-        
-        
-        
-        
-        
-    # print("to_predict_clean")
-    # print(to_predict_clean) 
-
-    # drop district names in Arabic
+    # drop district names in Arabic and post ID
     apartments_copy.drop(columns=["district", 'id'], inplace=True)
-    to_predict_clean.drop(columns=["district", 'id'], inplace=True)    
-    
+    to_predict_clean.drop(columns=["district", 'id'], inplace=True)   
+        
     predicted_price, real_price = train_and_predict(apartments_copy, to_predict_clean)
-    # print(predicted_price)
-    # print(real_price)
+
     deal_goodness = get_deal_goodness(predicted_price, real_price)
     
     return deal_goodness
 
-
-
-
-
-
-
-
 # %%
+# apartments = pd.read_csv("../data/apartments_sale_riyadh_cleaned.csv")
+# print(good_deal_indicator(apartments, 4403633))
