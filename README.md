@@ -1,39 +1,15 @@
+This is my capstone project for Misk Data Science Intensive bootcamp. This project focuses on the real estate market in Riyadh. More specifically, the apartments for sale, which are posted on Aqar (Saudi Arabia's leading real estate market).  We aim to help home buyers make better purchases, which is achieved through providing two main deliverables. First, an analytical dashboard, which provides insight into the real estate market and how it's been developing. Second, a feature I call "Good Deal Indicator," which empowers the home buyer providing them an educated opinion on whether the asking price for an apartment is fair. All the user needs to do is provide the post ID of the apartment he or she is interested in (which is easily accessable on Aqar), and we will take care of web-scraping the website to find the relevent post, clean the data of the apartment, predict a fair asking price for the apartment, and finally, report whether the actual asking price constitutes a fair, good, or terrible deal.
+
+
+
+
 # Data Dictionary
-
-Attribute| Description
------|------|
-neighborhood| the name of the neighborhood
-neighborhood_location| north-east, north-west, etc.
-contract_length| anually, monthly, weekly, daily
-price| price to sign a contract of the specified length
-family| managment rents to families only [1, 0]
-room| number of bedrooms 
-living_room| number of livingrooms
-bathroom| number of bathrooms
-floor| where the apartment is located
-property_age| in years
-kitchen| the apartment contains a kitchen [1, 0]
-elevator| the building contains an elevator [1, 0]
-ac| the apartment includes preinstalled air conditioning [1, 0]
-dimensions_length| in meters
-dimensions_width| in meters
-ad_number| on Aqar
-post_date| year-month-day
-latest_update| {"few days ago", "a week ago", etc.}
-views| on Aqar 
-location| (longitude, latitude)
-advertiser_name| provided by the advertiser
-advertiser_verified| [1, 0]
-advertiser_rating| [0, 10]
-number_ratings| number of ratings given to the advertiser
-
 
 
 Attribute| Description
 -----|------|
 user_id| id of the user who created the past
 id| post id
-uri| url of the post
 title| of the post
 price| in Riyals
 content| the text description of the property
@@ -52,15 +28,10 @@ furnished| {0, 1}
 latitude| latitude coordinate of the property
 longitude| longitude coordinate of the property 
 path| duplicate (with some differences)
-user| ******change to multiple attributes***
+user| dictionary containing rating of user and verification status
 district| where the property is located
 width| of property, in meteres
 length| of property, in meters
 advertiser_type| {'exclusive_marketer', 'normal_marketer', 'owner', 'agent'}
 create_time| date of post creation
-
-
-
-new attributes:
-
-street| use path to search for the word "شارع" and copy everything up until a /
+time_on_market| in days
