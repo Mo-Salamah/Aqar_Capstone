@@ -11,7 +11,7 @@ format:
     toc-depth: 2
     number-sections: true
     code-fold: true
-    title-block-banner: "data/header.jpg"
+    title-block-banner: true 
 jupyter: python3
 ---
 
@@ -154,11 +154,13 @@ make_plot(geo_df, "price")
 **Take a look at the average area**
 
 ```{python}
+#| echo: false
 make_plot(geo_df, "age")
 ```
 
 **Most apartments are between 120 - 220 square meters in size. And, older apartments tend to be slightly smaller than those made within the past year.**
 ```{python}
+#| echo: false
 apartments = pd.read_csv("../../data/apartments_sale_riyadh_cleaned.csv")
 data_wo_exteremevalues = apartments[(apartments['area'] < 1000) & (apartments['price'] < 3000000)]
 px.scatter(data_wo_exteremevalues, x="area", y="price", color='age',
@@ -168,7 +170,8 @@ px.scatter(data_wo_exteremevalues, x="area", y="price", color='age',
 **Take a look at the relationship between the average size and average price in different neighborhoods:**
 
 ```{python}
-#| fig-cap: Average price and area per distrit for Jeddah and Riyadh
+#| echo: false
+#| fig-cap: Average price and area per distrit for Riyadh
 
 from IPython import display
 small_apartments = apartments[apartments['area'] < 80000]
@@ -197,6 +200,7 @@ plt.legend([P, S], plot_arabic(pd.Series(['متوسط السعر', 'متوسط �
 
 **Covariance: What is the factor that when present increases the price the most?**
 ```{python}
+#| echo: false
 #| fig-cap: "Covariance Heatmap"
 apartments.drop(columns='last_update_year', inplace=True)
 mask = np.triu(np.ones_like(apartments.corr()))
@@ -215,13 +219,14 @@ sns.heatmap(ax=ax, data= apartments.corr(), cmap="Greens",mask=mask)
 
 **A deeper look at some interesting attributes:**
 ```{python}
+#| echo: false
 #| label: featureplots
 #| fig-cap: Visualizing the effect of the 4 features on the price
 # see how great the above 4 feature affect the price
 data = pd.read_csv("../../data/apartments_sale_riyadh_cleaned.csv")
-print(data.columns)
+
 # creating the canvas
-fig, ((ax1,ax2), (ax3,ax4)) = plt.subplots(2,2, figsize=(15,10))
+fig, ((ax1,ax2), (ax3,ax4)) = plt.subplots(2,2, figsize=(9,8))
 # plotting ax1 data: `kitchen`
 ax1 = sns.barplot(ax=ax1, y=data["price"], x=data["ketchen"] ,data=data)
 # configure the plot
