@@ -341,11 +341,11 @@ def good_deal_indicator(apartments, desired_post_id):
     apartments_copy.drop(columns=["district", 'id'], inplace=True)
     to_predict_clean.drop(columns=["district", 'id'], inplace=True)   
         
-    predicted_price, real_price = train_and_predict(apartments_copy, to_predict_clean)
+    predicted_price, asking_price = train_and_predict(apartments_copy, to_predict_clean)
 
-    deal_goodness = get_deal_goodness(predicted_price, real_price)
+    deal_goodness = get_deal_goodness(predicted_price, asking_price)
     
-    return deal_goodness
+    return deal_goodness, asking_price, predicted_price
 
 # %%
 # apartments = pd.read_csv("../data/apartments_sale_riyadh_cleaned.csv")
