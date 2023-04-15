@@ -12,7 +12,7 @@ To facilitate the understanding of the project and its findings, an Exploratory 
 
  This slide deck provides a high-level summary of the project's value proposition, aimed at non-technical stakeholders and decision-makers.
 
-<!-- [:link: Click here to view a breif exploratory data analysis](https://mo-salamah.github.io/Aqar_Capstone/) -->
+[:link: Click here to view the slides](https://mo-salamah.github.io/Aqar_Capstone/slides_prep)
 
 ## Repository Contents
 
