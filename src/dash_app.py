@@ -16,13 +16,13 @@ from good_deal_indicator_scraping import good_deal_indicator
 # =================================================================
 
 # load data 
-os.chdir("/Users/mo/Desktop/DSI/Aqar_Capstone/src")
-print(os.getcwd())
+os.chdir(os.path.dirname(os.path.abspath(__file__)))
+
+# Now, you can load the data using relative paths
 map_df = gpd.read_file("../data/riyadh.geojson")
 
 with open(r"../data/riyadh_districts.json", 'r', encoding='utf8', errors='ignore') as file:
     neighborhood = json.load(file)
-
 
 # getting arabic district names from neighborhood file
 ar_name = []
@@ -59,7 +59,8 @@ def get_geo_df(price_slider=None, age_slider=None, area_slider=None, beds_slider
 
     # Test access to apartments df
     # load data 
-    os.chdir("/Users/mo/Desktop/DSI/Aqar_Capstone/src")
+    # os.chdir("/Users/mo/Desktop/DSI/Aqar_Capstone/src")
+    os.chdir(os.path.dirname(os.path.abspath(__file__)))
     print(os.getcwd())
     map_df = gpd.read_file("../data/riyadh.geojson")
 

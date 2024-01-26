@@ -35,9 +35,12 @@ import warnings
 warnings.filterwarnings("ignore")
 
 #%%
+# Change directory to the parent directory (src)
+os.chdir(os.path.dirname(os.path.abspath(__file__)))
+
 # load data
-os.chdir("/Users/mo/Desktop/DSI/Aqar_Capstone/src")
 apartments = pd.read_csv("../data/apartments_sale_riyadh_cleaned.csv")
+
 # create train-test split
 train, test = train_test_split(apartments, test_size=0.3, random_state=123)
 
